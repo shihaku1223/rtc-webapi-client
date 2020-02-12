@@ -6,6 +6,8 @@ from urllib.parse import urlencode
 
 import xmltodict
 
+from rtcclient.type import Type
+
 class ProjectArea:
 
     # initialize the object with the data retrieved from /oslc/projectareas
@@ -60,5 +62,11 @@ class ProjectArea:
             ).build()
         response = self.sendRequest(request)
 
-        dict = xmltodict.parse(response.text)
-        return dict
+        obj_dict = xmltodict.parse(response.text)
+        types = obj_dict['rdf:RDF']['oslc:ResponseInfo']['rdfs:member']
+
+        typeList = []
+        for t in types:
+            typeList.append(Type(t))
+
+        return typeList
