@@ -91,7 +91,7 @@ class RTCClient:
         projectList = []
 
         for projectJson in jsonObj['oslc_cm:results']:
-            project = ProjectArea(projectJson)
+            project = ProjectArea(self, projectJson)
             projectList.append(project)
 
         return projectList

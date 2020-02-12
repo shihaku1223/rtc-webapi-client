@@ -4,11 +4,14 @@ import requests
 from rtcclient.request import RequestBuilder
 from urllib.parse import urlencode
 
+import xmltodict
+
 class ProjectArea:
 
     # initialize the object with the data retrieved from /oslc/projectareas
-    def __init__(self, jsonDict):
+    def __init__(self, client, jsonDict):
 
+        self._client = client
         self.resourceUrl = jsonDict['rdf:resource']
         self.uuid = self.resourceUrl.split('/')[-1]
 
@@ -18,8 +21,35 @@ class ProjectArea:
     def retrieveWorkItems(self):
         pass
 
+    def sendRequest(self, request):
+        return self._client.sendRequest(request)
+
     def workItemsServices(self):
-        url = self.repository + '/oslc/contexts/{}/workitems/services.xml'
+        url = self._client.repository + \
+            '/oslc/contexts/{}/workitems/services.xml'.format(self.uuid)
+        _headers = {}
+        _headers['Accept'] = 'application/xml'
+        _headers['OSLC-Core-version'] = '2.0'
+
+        request = RequestBuilder('GET',
+            url,
+            headers = _headers
+            ).build()
+        response = self.sendRequest(request)
+
+        dict = xmltodict.parse(response.text)
+        return dict
+
+    def getOSLCService(self):
+        dict = self.workItemsServices()
+        oslcService = dict['rdf:RDF']['oslc:ServiceProvider']['oslc:service']
+
+        return oslcService
+
+    def getTypes(self):
+        url = self._client.repository + \
+            '/oslc/types/{}'.format(self.uuid)
+
         _headers = {}
         _headers['Accept'] = 'application/xml'
         _headers['OSLC-Core-version'] = '2.0'
