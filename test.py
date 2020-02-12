@@ -17,9 +17,7 @@ for project in projectList:
 
 serviceList = projectList[0].workItemsServices()['rdf:RDF']['oslc:ServiceProvider']['oslc:service']
 
-count = projectList[1].getTypes()['rdf:RDF']['oslc:ResponseInfo']['oslc:totalCount']
-print(count)
-types = projectList[1].getTypes()['rdf:RDF']['oslc:ResponseInfo']['rdfs:member']
+types = projectList[1].getTypes()
 for item in types:
-    print("Type")
-    print(item)
+    print(item.rdf_about)
+    print(item.identifier)

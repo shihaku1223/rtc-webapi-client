@@ -2,11 +2,13 @@
 
 class Type:
 
-    def __init__(self, client, obj_dict):
+    def __init__(self, obj_dict):
 
-        self.rdf_about = obj_dict['@rdf:about']
-        self.projectArea = obj_dict['rtc_cm:projectArea']['@rdf:resource']
-        self.category = obj_dict['rtc_cm:category']
-        self.iconUrl = obj_dict['rtc_cm:iconUrl']
-        self.title = obj_dict['dcterms:title']['#text']
-        self.identifier = obj_dict['dcterms:identifier']['#text']
+        rootDict = obj_dict['rtc_cm:Type']
+
+        self.rdf_about = rootDict['@rdf:about']
+        self.projectArea = rootDict['rtc_cm:projectArea']['@rdf:resource']
+        self.category = rootDict['rtc_cm:category']
+        self.iconUrl = rootDict['rtc_cm:iconUrl']
+        self.title = rootDict['dcterms:title']['#text']
+        self.identifier = rootDict['dcterms:identifier']['#text']
