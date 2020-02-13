@@ -14,10 +14,12 @@ projectList = client.getProjectList()
 for project in projectList:
     print(project.uuid)
     print(project.title)
+ 
+project = client.getProjectAreaByName('OlySandBox')
+print(project.title)
 
 serviceList = projectList[0].workItemsServices()['rdf:RDF']['oslc:ServiceProvider']['oslc:service']
 
-types = projectList[1].getTypes()
+types = project.getTypes()
 for item in types:
-    print(item.rdf_about)
-    print(item.identifier)
+    print("type: {} {}".format(item.rdf_about, item.identifier))

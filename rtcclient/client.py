@@ -96,6 +96,15 @@ class RTCClient:
 
         return projectList
 
+    def getProjectAreaByName(self, name):
+        projectList = self.getProjectList()
+
+        for project in projectList:
+            if project.title == name:
+                return project
+
+        return None
+
     def test(self):
         url = self.repository + '/oslc/workitems/8162'
         _headers = {}
