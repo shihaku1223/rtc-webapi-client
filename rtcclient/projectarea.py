@@ -15,20 +15,36 @@ class ProjectArea:
 
         self._client = client
         self.resourceUrl = jsonDict['rdf:resource']
-        self.uuid = self.resourceUrl.split('/')[-1]
+        self._id = self.resourceUrl.split('/')[-1]
 
         self.title = jsonDict['dc:title']
         self.description = jsonDict['dc:description']
 
-    def retrieveWorkItems(self):
-        pass
+    def retrieveWorkItemsId(self, page_size, start_index):
+        url = self._client.repository + \
+            '/oslc/contexts/{}/workitems' \
+            '?oslc_cm.pageSize={}&_startIndex={}'
+        url = url.format(self._id. page_size, start_index)
+
+        _headers = {}
+        _headers['Accept'] = 'application/xml'
+
+        request = RequestBuilder('GET',
+            url,
+            headers = _headers
+            ).build()
+        response = self.sendRequest(request)
+
+        obj_dict = xmltodict.parse(response.text)
+
+        return obj_dict
 
     def sendRequest(self, request):
         return self._client.sendRequest(request)
 
     def workItemsServices(self):
         url = self._client.repository + \
-            '/oslc/contexts/{}/workitems/services.xml'.format(self.uuid)
+            '/oslc/contexts/{}/workitems/services.xml'.format(self._id)
         _headers = {}
         _headers['Accept'] = 'application/xml'
         _headers['OSLC-Core-version'] = '2.0'
@@ -50,7 +66,7 @@ class ProjectArea:
 
     def getTypes(self):
         url = self._client.repository + \
-            '/oslc/types/{}'.format(self.uuid)
+            '/oslc/types/{}'.format(self._id)
 
         _headers = {}
         _headers['Accept'] = 'application/xml'
