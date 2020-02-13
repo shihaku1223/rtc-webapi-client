@@ -3,6 +3,7 @@
 import requests
 from rtcclient.request import RequestBuilder
 from urllib.parse import urlencode
+from rtcclient.workitem import WorkItem
 
 import xmltodict
 
@@ -20,11 +21,11 @@ class ProjectArea:
         self.title = jsonDict['dc:title']
         self.description = jsonDict['dc:description']
 
-    def retrieveWorkItemsId(self, page_size, start_index):
+    def retrieveWorkItems(self, page_size=100, start_index=0):
         url = self._client.repository + \
             '/oslc/contexts/{}/workitems' \
             '?oslc_cm.pageSize={}&_startIndex={}'
-        url = url.format(self._id. page_size, start_index)
+        url = url.format(self._id, page_size, start_index)
 
         _headers = {}
         _headers['Accept'] = 'application/xml'
@@ -63,6 +64,11 @@ class ProjectArea:
         oslcService = dict['rdf:RDF']['oslc:ServiceProvider']['oslc:service']
 
         return oslcService
+
+    def getWorkItemTotalCount(self):
+        obj = self.retrieveWorkItems(page_size=1)
+
+        return obj['oslc_cm:Collection']['@oslc_cm:totalCount']
 
     def getTypes(self):
         url = self._client.repository + \
