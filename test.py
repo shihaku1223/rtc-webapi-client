@@ -38,7 +38,10 @@ for item in types:
 
 defectType =  types[-1]
 obj = project.getTypeAllowedValues(defectType)
-print(json.dumps(obj))
+
+allowedValueDict = project.getAttributeAllowedValueDict(defectType, '計画対象')
+for title, resource in allowedValueDict.items():
+    print(title, resource)
 
 sys.exit(0)
 

@@ -119,7 +119,6 @@ class ProjectArea:
                 rdf_about = desc['@rdf:about']
 
                 if rdf_about.split('/')[-1] == 'allowedValues':
-                    allowedValueDict['allowedValue'] = {}
                     allowedValueDict['allowedValue'][rdf_about] = []
                     allowedValueList = allowedValueDict['allowedValue'][rdf_about]
                     print(rdf_about)
@@ -149,6 +148,43 @@ class ProjectArea:
                         else:
                             allowedValueDict['type'][typeName]['defaultValue'] = desc['oslc:defaultValue']
         return allowedValueDict
+
+    def getAttributeTitle(self, attributeUrl):
+        _headers = {}
+        _headers['Accept'] = 'application/rdf+xml'
+        _headers['OSLC-Core-Version'] = '2.0'
+
+        request = RequestBuilder('GET',
+            attributeUrl,
+            headers = _headers
+            ).build()
+        response = self.sendRequest(request)
+        obj_dict = xmltodict.parse(response.text)['rdf:RDF']['rdf:Description']
+
+        if 'dcterms:title' not in obj_dict:
+            return None
+        if '#text' not in obj_dict['dcterms:title']:
+            return None
+
+        return obj_dict['dcterms:title']['#text']
+
+    def getAttributeAllowedValueDict(self, type, attributeTitle):
+        allowedValueDict = self.getTypeAllowedValues(type)
+        attributeTypes = allowedValueDict['type']
+        allowedValues = allowedValueDict['allowedValue']
+
+        attributeResourceDict = {}
+        for typeName, attr in attributeTypes.items():
+            #print('{}: {}'.format(attr['title'], typeName))
+            if attr['title'] != attributeTitle:
+                continue
+            if 'allowedValues' in attr:
+                print(attr['allowedValues'])
+                for attribute in allowedValues[attr['allowedValues']]:
+                    attributeResourceDict[self.getAttributeTitle(attribute)] = attribute
+                    #print(attribute, self.getAttributeTitle(attribute))
+
+        return attributeResourceDict
 
     def createWorkItemTest(self, type = None):
         url = self._client.repository + \
