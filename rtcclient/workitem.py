@@ -2,6 +2,7 @@
 
 from rtcclient.request import RequestBuilder
 import xmltodict
+import collections
 
 class WorkItem(object):
 
@@ -14,6 +15,7 @@ class WorkItem(object):
             if identifier == 'id':
                 self._id = raw_dict[identifier]
         """
+
     def getProperty(self, propertyName):
         return self._raw_dict[propertyName]
 
@@ -51,7 +53,12 @@ class WorkItem(object):
         obj_dict = xmltodict.parse(response.text)
 
         workItems = obj_dict['workitem']['workItem']
+
         workItemList = []
+        # only one workitem
+        if isinstance(workItems, collections.OrderedDict):
+            workItemList.append(WorkItem(workItems))
+            return workItemList
 
         for workItem in workItems:
             workItemList.append(WorkItem(workItem))
