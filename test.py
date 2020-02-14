@@ -3,7 +3,7 @@
 from rtcclient.client import RTCClient
 from rtcclient.workitem import WorkItem
 import sys
-
+import json
 import collections
 
 repository = "https://www.somed002.sony.co.jp/ccm"
@@ -37,27 +37,14 @@ for item in types:
     print("type: {} {}".format(item.rdf_about, item.identifier))
 
 defectType =  types[-1]
-obj = project.getTypeAllowedValues(defectType)['rdf:RDF']['rdf:Description']
-for desc in obj:
-    print("DESC")
+obj = project.getTypeAllowedValues(defectType)
+print(json.dumps(obj))
 
-    if 'dcterms:title' in desc:
-        print(desc['dcterms:title']['#text'])
-
-    if 'oslc:allowedValues' in desc:
-        print(desc['oslc:allowedValues']['@rdf:resource'])
-
-    if 'oslc:allowedValue' in desc:
-        print(desc['oslc:allowedValue'][0]['@rdf:resource'])
-    """
-    for key, value in desc.items():
-        print(key, value)
-    """
-
+sys.exit(0)
 
 print(project.title)
 project.createWorkItemTest()
-sys.exit(0)
+
 
 workItems = WorkItem.retrieveWorkItems(client,
     filter="projectArea/name='OlySandBox'",

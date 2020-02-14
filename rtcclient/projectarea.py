@@ -107,8 +107,48 @@ class ProjectArea:
             headers = _headers
             ).build()
         response = self.sendRequest(request)
-        obj_dict = xmltodict.parse(response.text)
-        return obj_dict
+        obj_dict = xmltodict.parse(response.text)['rdf:RDF']['rdf:Description']
+
+        allowedValueDict = {}
+        allowedValueDict['allowedValue'] = {}
+        allowedValueDict['type'] = {}
+        for desc in obj_dict:
+            print("DESC")
+            rdf_about = None
+            if '@rdf:about' in desc:
+                rdf_about = desc['@rdf:about']
+
+                if rdf_about.split('/')[-1] == 'allowedValues':
+                    allowedValueDict['allowedValue'] = {}
+                    allowedValueDict['allowedValue'][rdf_about] = []
+                    allowedValueList = allowedValueDict['allowedValue'][rdf_about]
+                    print(rdf_about)
+                    if 'oslc:allowedValue' in desc:
+                        for allowValue in desc['oslc:allowedValue']:
+                            print(allowValue['@rdf:resource'])
+                            allowedValueList.append(allowValue['@rdf:resource'])
+
+            if 'oslc:name' in desc:
+                typeName = desc['oslc:name']['#text']
+                allowedValueDict['type'][typeName] = {}
+                allowedValueDict['type'][typeName]['@rdf:about'] = rdf_about
+
+                if 'dcterms:title' in desc:
+                    print(desc['dcterms:title']['#text'])
+                    allowedValueDict['type'][typeName]['title'] = desc['dcterms:title']['#text']
+
+                if 'oslc:allowedValues' in desc:
+                    allowedValueDict['type'][typeName]['allowedValues'] = desc['oslc:allowedValues']['@rdf:resource']
+                    print(desc['oslc:allowedValues']['@rdf:resource'])
+
+                if 'oslc:defaultValue' in desc:
+                    if desc['oslc:defaultValue'] is not None:
+                        if '@rdf:resource' in desc['oslc:defaultValue']:
+                            allowedValueDict['type'][typeName]['defaultValue'] = desc['oslc:defaultValue']['@rdf:resource']
+                            print(desc['oslc:defaultValue']['@rdf:resource'])
+                        else:
+                            allowedValueDict['type'][typeName]['defaultValue'] = desc['oslc:defaultValue']
+        return allowedValueDict
 
     def createWorkItemTest(self, type = None):
         url = self._client.repository + \
