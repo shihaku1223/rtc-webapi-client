@@ -76,7 +76,7 @@ class WorkItem(object):
             '[{}]/{}' \
             '&size={}&pos={}'
         url = url.format(filter, elements, size, pos)
-        print(url)
+
         _headers = {}
         _headers['Accept'] = 'application/xml'
 
@@ -119,7 +119,8 @@ class AttributeTypeMap:
             '障害カテゴリー': 'rtc_ext:com.ibm.team.workitem.workItemType.defect.defect_category',
             '発生日': 'rtc_ext:com.ibm.team.workitem.workItemType.defect.detect_date',
             '試験番号': 'rtc_ext:com.ibm.team.workitem.workItemType.defect.exam_id',
-            '発生トリガー': 'rtc_ext:com.ibm.team.workitem.workItemType.defect.trigger'
+            '発生トリガー': 'rtc_ext:com.ibm.team.workitem.workItemType.defect.trigger',
+            '解決状況': 'rtc_ext:com.ibm.team.workitem.workItemType.defect.resolve_state',
         }
 
         if map_dict is not None:
