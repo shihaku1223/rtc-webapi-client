@@ -20,8 +20,8 @@ class WorkItem(object):
         return self._raw_dict[propertyName]
 
     # filter = "projectArea/name='Test' and owner/name='ABC'"
-    @classmethod
-    def retrieveWorkItems(self, client, filter, properties=['id',], size=100, pos=0):
+    @staticmethod
+    def retrieveWorkItems(client, filter, properties=['id',], size=100, pos=0):
 
         elements = ''
         if properties is None:
@@ -67,7 +67,7 @@ class WorkItem(object):
 
 class AttributeTypeMap:
 
-    def __init__(self, map_dict):
+    def __init__(self, map_dict=None):
         self._map_dict = {
             'ID': 'dc:identifier',
             '要約': 'dc:title',
@@ -91,7 +91,8 @@ class AttributeTypeMap:
             '発生トリガー': 'rtc_cm:com.ibm.team.workitem.workItemType.defect.trigger'
         }
 
-        self._map_dict.update(map_dict)
+        if map_dict is not None:
+            self._map_dict.update(map_dict)
 
     def getTypeByTitle(self, title):
         return self._map_dict[title]

@@ -4,6 +4,7 @@ import requests
 from rtcclient.request import RequestBuilder
 from urllib.parse import urlencode
 from rtcclient.workitem import WorkItem
+from rtcclient.workitem import AttributeTypeMap
 
 import xmltodict
 import json
@@ -21,6 +22,8 @@ class ProjectArea:
 
         self.title = jsonDict['dc:title']
         self.description = jsonDict['dc:description']
+
+        self._typeAllowedValues = None
 
     def retrieveWorkItems(self, page_size=100, start_index=0):
         url = self._client.repository + \
@@ -94,7 +97,19 @@ class ProjectArea:
 
         return typeList
 
+    def getTypeByName(self, typeName):
+        types = self.getTypes()
+
+        for item in types:
+            if item.title == typeName:
+                return item
+
+        return None
+
     def getTypeAllowedValues(self, type):
+        if self._typeAllowedValues is not None:
+            return self._typeAllowedValues
+
         url = self._client.repository + \
             '/oslc/context/{}/shapes/workitems/{}'.format(self._id, type.identifier)
 
@@ -113,7 +128,7 @@ class ProjectArea:
         allowedValueDict['allowedValue'] = {}
         allowedValueDict['type'] = {}
         for desc in obj_dict:
-            print("DESC")
+            #print("DESC")
             rdf_about = None
             if '@rdf:about' in desc:
                 rdf_about = desc['@rdf:about']
@@ -121,10 +136,10 @@ class ProjectArea:
                 if rdf_about.split('/')[-1] == 'allowedValues':
                     allowedValueDict['allowedValue'][rdf_about] = []
                     allowedValueList = allowedValueDict['allowedValue'][rdf_about]
-                    print(rdf_about)
+                    #print(rdf_about)
                     if 'oslc:allowedValue' in desc:
                         for allowValue in desc['oslc:allowedValue']:
-                            print(allowValue['@rdf:resource'])
+                            #print(allowValue['@rdf:resource'])
                             allowedValueList.append(allowValue['@rdf:resource'])
 
             if 'oslc:name' in desc:
@@ -133,20 +148,22 @@ class ProjectArea:
                 allowedValueDict['type'][typeName]['@rdf:about'] = rdf_about
 
                 if 'dcterms:title' in desc:
-                    print(desc['dcterms:title']['#text'])
+                    #print(desc['dcterms:title']['#text'])
                     allowedValueDict['type'][typeName]['title'] = desc['dcterms:title']['#text']
 
                 if 'oslc:allowedValues' in desc:
                     allowedValueDict['type'][typeName]['allowedValues'] = desc['oslc:allowedValues']['@rdf:resource']
-                    print(desc['oslc:allowedValues']['@rdf:resource'])
+                    #print(desc['oslc:allowedValues']['@rdf:resource'])
 
                 if 'oslc:defaultValue' in desc:
                     if desc['oslc:defaultValue'] is not None:
                         if '@rdf:resource' in desc['oslc:defaultValue']:
                             allowedValueDict['type'][typeName]['defaultValue'] = desc['oslc:defaultValue']['@rdf:resource']
-                            print(desc['oslc:defaultValue']['@rdf:resource'])
+                            #print(desc['oslc:defaultValue']['@rdf:resource'])
                         else:
                             allowedValueDict['type'][typeName]['defaultValue'] = desc['oslc:defaultValue']
+
+        self._typeAllowedValues = allowedValueDict
         return allowedValueDict
 
     def getAttributeTitle(self, attributeUrl):
@@ -179,12 +196,82 @@ class ProjectArea:
             if attr['title'] != attributeTitle:
                 continue
             if 'allowedValues' in attr:
-                print(attr['allowedValues'])
+                #print(attr['allowedValues'])
                 for attribute in allowedValues[attr['allowedValues']]:
                     attributeResourceDict[self.getAttributeTitle(attribute)] = attribute
                     #print(attribute, self.getAttributeTitle(attribute))
 
         return attributeResourceDict
+
+    def getAttributeResourceUrl(self, type, attributeTitle, targetTitle):
+        allowedValueDict = self.getTypeAllowedValues(type)
+        attributeTypes = allowedValueDict['type']
+        allowedValues = allowedValueDict['allowedValue']
+
+
+        for typeName, attr in attributeTypes.items():
+            #print('{}: {}'.format(attr['title'], typeName))
+            if attr['title'] != attributeTitle:
+                continue
+            if 'allowedValues' in attr:
+                #print(attr['allowedValues'])
+                for attribute in allowedValues[attr['allowedValues']]:
+                    if self.getAttributeTitle(attribute) == targetTitle:
+                        return attribute
+
+        return None
+
+    def createWorkItem(self, properties):
+
+        workItemType = None
+        if 'タイプ' in properties:
+            workItemType =  self.getTypeByName(properties['タイプ'])
+
+        url = self._client.repository + \
+            '/oslc/contexts/{}/workitems'.format(self._id)
+        _headers = {}
+        _headers['Accept'] = 'text/json'
+        _headers['Content-Type'] = 'application/x-oslc-cm-change-request+json'
+
+
+        body = {}
+        attrMap = AttributeTypeMap()
+        for propertyTitle, target in properties.items():
+            typeName = attrMap.getTypeByTitle(propertyTitle)
+            resourceUrl = self.getAttributeResourceUrl(workItemType, propertyTitle, target)
+
+            body[typeName] = {}
+            body[typeName]['rdf:resource'] = resourceUrl
+
+        body['dc:title'] = 'This is title.'
+        body['dc:description'] = 'This is description.'
+
+        # 所有者
+        body['rtc_cm:ownedBy'] = {}
+        body['rtc_cm:ownedBy']['rdf:resource'] = "https://www.somed002.sony.co.jp/jts/users/sibo.wang"
+
+        # 発生日
+        body['rtc_cm:com.ibm.team.workitem.workItemType.defect.detect_date'] = '2020-02-12T03:00:00.000Z'
+
+        # 試験番号
+        body['rtc_cm:com.ibm.team.workitem.workItemType.defect.exam_id'] = '1'
+
+        jsonStr = json.dumps(body)
+
+        request = RequestBuilder('POST',
+            url,
+            headers = _headers,
+            data = jsonStr
+            ).build()
+        response = self.sendRequest(request)
+
+        obj = json.loads(response.text)
+
+        for k, v in obj.items():
+            print('{}: {}'.format(k, v))
+
+        #return response.text
+
 
     def createWorkItemTest(self, type = None):
         url = self._client.repository + \
@@ -241,5 +328,8 @@ class ProjectArea:
         response = self.sendRequest(request)
 
         obj = json.loads(response.text)
+        """
         for k, v in obj.items():
             print('{}: {}'.format(k, v))
+        """
+        return response.text
