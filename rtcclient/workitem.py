@@ -64,3 +64,40 @@ class WorkItem(object):
             workItemList.append(WorkItem(workItem))
 
         return workItemList
+
+class AttributeTypeMap:
+
+    def __init__(self, map_dict):
+        self._map_dict = {
+            'ID': 'dc:identifier',
+            '要約': 'dc:title',
+            '說明': 'dc:description',
+            'タイプ': 'dc:type',
+
+            '分類先': 'rtc_cm:filedAgainst',
+            '計画対象': 'rtc_cm:plannedFor',
+            '所有者': 'rtc_cm:ownedBy',
+
+            '検出方法': 'rtc_cm:com.ibm.team.workitem.workItemType.defect.howto_detect',
+
+            '検出工程': 'rtc_cm:com.ibm.team.workitem.workItemType.defect.detect_phase',
+
+            '障害カテゴリー': 'rtc_cm:com.ibm.team.workitem.workItemType.defect.defect_category',
+
+            '発生日': 'rtc_cm:com.ibm.team.workitem.workItemType.defect.detect_date',
+
+            '試験番号': 'rtc_cm:com.ibm.team.workitem.workItemType.defect.exam_id',
+
+            '発生トリガー': 'rtc_cm:com.ibm.team.workitem.workItemType.defect.trigger'
+        }
+
+        self._map_dict.update(map_dict)
+
+    def getTypeByTitle(self, title):
+        return self._map_dict[title]
+
+    def getTitleByType(self, typeName):
+        for k, v in self._map_dict:
+            if typeName == v:
+                return k
+        return None
