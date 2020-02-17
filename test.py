@@ -19,15 +19,41 @@ password = "sibo.wang"
 
 client = RTCClient(repository, username, password)
 client.login()
-print(client.getServiceProviderCatalogUrl())
-projectList = client.getProjectList()
 
+workItem = WorkItem.getWorkItemOSLCResource(client, 8888)
+projectList = client.getProjectList()
 for project in projectList:
     print(project._id)
     print(project.title)
  
 project = client.getProjectAreaByName('OlySandBox')
 print(project.title)
+"""
+properties = {
+    'タイプ': '障害',
+    '分類先': 'カテゴリー 1',
+    '計画対象': 'リリース 1.0',
+    '検出方法': '修正確認中',
+    '検出工程': '[IPF-3]ソフトウェア結合試験',
+    '発生トリガー': 'ソフトウェア構成',
+    '障害カテゴリー': '1．正常系操作',
+}
+
+stringPropeties = {
+    '発生日': '2020-02-12T03:00:00.000Z',
+    '試験番号': '1'
+}
+
+project.createWorkItem('This is title.',
+    'This is description.',
+    'https://www.somed002.sony.co.jp/jts/users/sibo.wang',
+    properties, stringPropeties)
+
+"""
+
+sys.exit(0)
+
+print(client.getServiceProviderCatalogUrl())
 
 workItems = WorkItem.retrieveWorkItems(client,
     filter="projectArea/name='OlySandBox'",
@@ -76,22 +102,6 @@ printAttributeAllowedValueDict(project, defectType, '発生トリガー')
 printAttributeAllowedValueDict(project, defectType, '障害カテゴリー')
 """
 
-properties = {
-    'タイプ': '障害',
-    '分類先': 'カテゴリー 1',
-    '計画対象': 'リリース 1.0',
-    '検出方法': '修正確認中',
-    '検出工程': '[IPF-3]ソフトウェア結合試験',
-    '発生トリガー': 'ソフトウェア構成',
-    '障害カテゴリー': '1．正常系操作'
-}
-"""
-for attribute, target in properties.items():
-    print(target, project.getAttributeResourceUrl(defectType, attribute, target))
-"""
-project.createWorkItem(properties)
-sys.exit(0)
 
-print(project.title)
-print(project.createWorkItemTest(properties))
+sys.exit(0)
 
