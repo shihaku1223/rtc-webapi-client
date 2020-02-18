@@ -23,16 +23,49 @@ class WorkItem(object):
         if raw_data is not None:
             self._raw_data = raw_data
 
-    @staticmethod
-    def createWorkItemRPT(rptXML):
-        return WorkItem(raw_data=rptXML, data_type='DATATYPE_OSLCJSON')
+    def getId(self):
+        if self._rawDataType == self.RAW_DATATYPE['DATATYPE_OSLCJSON']:
+            return self._raw_data['dcterms:identifier']
+        elif self._rawDataType == self.RAW_DATATYPE['DATATYPE_RPTXML']:
+            return self._raw_data['id']
 
-    @staticmethod
-    def createWorkItemOSLCJSON(oslcJSON):
-        return WorkItem(raw_data=oslcJSON, data_type='DATATYPE_RPTXML')
+        raise Exception('Unknown data type')
 
     def getProperty(self, propertyName):
         return self._raw_data[propertyName]
+
+    def updateWorkItem(self, eTag, body, action = None):
+
+        url = client.repository + \
+            '/resource/itemName/com.ibm.team.workitem.WorkItem/{}'
+        url = url.format(self.getId())
+
+        if action is not None:
+            url = url + '?_action={}'.format(action)
+
+        _headers = {}
+        _headers['Accept'] = 'application/json'
+        _headers['OSLC-Core-Version'] = '2.0'
+        _headers['Content-Type'] = 'application/json'
+        _headers['If-Match'] = eTag
+
+        jsonStr = json.dumps(body)
+
+        request = RequestBuilder('PUT',
+            url,
+            data = jsonStr,
+            headers = _headers
+            ).build()
+        response = client.sendRequest(request)
+        obj_dict =  json.loads(response.text)
+
+    @staticmethod
+    def createWorkItemRPT(rptXML):
+        return WorkItem(raw_data=rptXML, data_type='DATATYPE_RPTXML')
+
+    @staticmethod
+    def createWorkItemOSLCJSON(oslcJSON):
+        return WorkItem(raw_data=oslcJSON, data_type='DATATYPE_OSLCJSON')
 
     @staticmethod
     def getWorkItemOSLCResource(client, workItemId):
@@ -49,11 +82,10 @@ class WorkItem(object):
             headers = _headers
             ).build()
         response = client.sendRequest(request)
-        obj_dict =  json.dumps(response.text)
+        obj_dict =  json.loads(response.text)
 
         print(response.headers['ETag'])
         return WorkItem.createWorkItemOSLCJSON(obj_dict)
-
 
     # filter = "projectArea/name='Test' and owner/name='ABC'"
     @staticmethod
@@ -93,11 +125,11 @@ class WorkItem(object):
         workItemList = []
         # only one workitem
         if isinstance(workItems, collections.OrderedDict):
-            workItemList.append(WorkItem(workItems))
+            workItemList.append(WorkItem.createWorkItemRPT(workItems))
             return workItemList
 
         for workItem in workItems:
-            workItemList.append(WorkItem(workItem))
+            workItemList.append(WorkItem.createWorkItemRPT(workItem))
 
         return workItemList
 

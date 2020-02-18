@@ -21,6 +21,15 @@ client = RTCClient(repository, username, password)
 client.login()
 
 workItem = WorkItem.getWorkItemOSLCResource(client, 8888)
+print(workItem.getId())
+
+workItems = WorkItem.retrieveWorkItems(client,
+    filter="projectArea/name='OlySandBox'",
+    properties=['id', 'summary', 'type/id'], size=10)
+
+for workitem in workItems:
+    print(workitem.getProperty('id'))
+sys.exit(0)
 projectList = client.getProjectList()
 for project in projectList:
     print(project._id)
@@ -55,12 +64,7 @@ sys.exit(0)
 
 print(client.getServiceProviderCatalogUrl())
 
-workItems = WorkItem.retrieveWorkItems(client,
-    filter="projectArea/name='OlySandBox'",
-    properties=['id', 'summary', 'type/id'], size=10)
 
-for workitem in workItems:
-    print(workitem.getProperty('id'))
 
 workItems = WorkItem.retrieveWorkItems(client,
     filter="id=8838",
