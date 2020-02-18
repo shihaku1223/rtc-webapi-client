@@ -23,6 +23,9 @@ class WorkItem(object):
         if raw_data is not None:
             self._raw_data = raw_data
 
+    def getBody(self):
+        return self._raw_data
+
     def getId(self):
         if self._rawDataType == self.RAW_DATATYPE['DATATYPE_OSLCJSON']:
             return self._raw_data['dcterms:identifier']
@@ -34,7 +37,7 @@ class WorkItem(object):
     def getProperty(self, propertyName):
         return self._raw_data[propertyName]
 
-    def updateWorkItem(self, eTag, body, action = None):
+    def updateWorkItem(self, client, eTag, action = None):
 
         url = client.repository + \
             '/resource/itemName/com.ibm.team.workitem.WorkItem/{}'
@@ -49,7 +52,7 @@ class WorkItem(object):
         _headers['Content-Type'] = 'application/json'
         _headers['If-Match'] = eTag
 
-        jsonStr = json.dumps(body)
+        jsonStr = json.dumps(self.getBody())
 
         request = RequestBuilder('PUT',
             url,
@@ -58,6 +61,8 @@ class WorkItem(object):
             ).build()
         response = client.sendRequest(request)
         obj_dict =  json.loads(response.text)
+        for k, v in obj_dict.items():
+            print(k, v)
 
     @staticmethod
     def createWorkItemRPT(rptXML):
@@ -84,8 +89,7 @@ class WorkItem(object):
         response = client.sendRequest(request)
         obj_dict =  json.loads(response.text)
 
-        print(response.headers['ETag'])
-        return WorkItem.createWorkItemOSLCJSON(obj_dict)
+        return WorkItem.createWorkItemOSLCJSON(obj_dict), response.headers['ETag']
 
     # filter = "projectArea/name='Test' and owner/name='ABC'"
     @staticmethod

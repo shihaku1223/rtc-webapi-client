@@ -6,7 +6,6 @@ import sys
 import json
 import collections
 
-
 def printAttributeAllowedValueDict(project, defectType, title):
     print('{} allowedValue'.format(title))
     allowedValueDict = project.getAttributeAllowedValueDict(defectType, title)
@@ -19,9 +18,8 @@ password = "sibo.wang"
 
 client = RTCClient(repository, username, password)
 client.login()
+print(client.getServiceProviderCatalogUrl())
 
-workItem = WorkItem.getWorkItemOSLCResource(client, 8888)
-print(workItem.getId())
 
 workItems = WorkItem.retrieveWorkItems(client,
     filter="projectArea/name='OlySandBox'",
@@ -29,14 +27,38 @@ workItems = WorkItem.retrieveWorkItems(client,
 
 for workitem in workItems:
     print(workitem.getProperty('id'))
-sys.exit(0)
+
 projectList = client.getProjectList()
 for project in projectList:
-    print(project._id)
-    print(project.title)
- 
+    print('{} {} {}'.format(project.title,
+        project._id, project.getWorkItemTotalCount()))
+
+    types = project.getTypes()
+    for item in types:
+        print("type: {} {} {}".format(item.rdf_about, item.identifier, item.title))
+
+
 project = client.getProjectAreaByName('OlySandBox')
 print(project.title)
+
+defectType =  project.getTypeByName('障害')
+print(defectType.title)
+printAttributeAllowedValueDict(project, defectType, '状況')
+actionName = project.getWorkItemTypeActionIdByName(defectType, 'Escalate')
+workItem, etag = WorkItem.getWorkItemOSLCResource(client, 8888)
+print(workItem.getId(), etag)
+workItem.updateWorkItem(client, etag, actionName)
+
+"""
+printAttributeAllowedValueDict(project, defectType, 'タイプ')
+printAttributeAllowedValueDict(project, defectType, '分類先')
+printAttributeAllowedValueDict(project, defectType, '計画対象')
+printAttributeAllowedValueDict(project, defectType, '検出方法')
+printAttributeAllowedValueDict(project, defectType, '検出工程')
+printAttributeAllowedValueDict(project, defectType, '発生トリガー')
+printAttributeAllowedValueDict(project, defectType, '障害カテゴリー')
+"""
+
 """
 properties = {
     'タイプ': '障害',
@@ -62,9 +84,6 @@ project.createWorkItem('This is title.',
 
 sys.exit(0)
 
-print(client.getServiceProviderCatalogUrl())
-
-
 
 workItems = WorkItem.retrieveWorkItems(client,
     filter="id=8838",
@@ -76,36 +95,6 @@ for workitem in workItems:
     print(workitem.getProperty('type')['name'])
 
 sys.exit(0)
-"""
-serviceList = projectList[0].workItemsServices()['rdf:RDF']['oslc:ServiceProvider']['oslc:service']
-
-obj = project.retrieveWorkItems(page_size=1)['oslc_cm:Collection']['oslc_cm:ChangeRequest']
-for i in obj:
-    print(i, ' ',obj[i])
-    if isinstance(obj[i], collections.OrderedDict):
-        for j in obj[i]:
-            print(j)
-"""
-print(project.getWorkItemTotalCount())
-print('Project tile')
-types = project.getTypes()
-for item in types:
-    print("type: {} {} {}".format(item.rdf_about, item.identifier, item.title))
-
-defectType =  project.getTypeByName('障害')
-print(defectType.title)
-
-obj = project.getTypeAllowedValues(defectType)
-"""
-printAttributeAllowedValueDict(project, defectType, 'タイプ')
-printAttributeAllowedValueDict(project, defectType, '分類先')
-printAttributeAllowedValueDict(project, defectType, '計画対象')
-printAttributeAllowedValueDict(project, defectType, '検出方法')
-printAttributeAllowedValueDict(project, defectType, '検出工程')
-printAttributeAllowedValueDict(project, defectType, '発生トリガー')
-printAttributeAllowedValueDict(project, defectType, '障害カテゴリー')
-"""
 
 
-sys.exit(0)
 

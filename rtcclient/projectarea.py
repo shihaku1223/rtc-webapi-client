@@ -9,6 +9,7 @@ from rtcclient.workitem import AttributeTypeMap
 import xmltodict
 import json
 
+from urllib.parse import urljoin
 from rtcclient.type import Type
 
 class ProjectArea:
@@ -220,6 +221,30 @@ class ProjectArea:
                         return attribute
 
         return None
+
+    def getWorkItemTypeActions(self, type):
+        actionsUrl = None
+        allowedValueDict = self.getAttributeAllowedValueDict(type, '状況')
+        for title, resource in allowedValueDict.items():
+            actionsUrl = urljoin(resource, '.').replace('states', 'actions')
+            break
+
+        _headers = {}
+        _headers['Accept'] = 'application/json'
+
+        request = RequestBuilder('GET',
+            actionsUrl,
+            headers = _headers
+            ).build()
+        response = self.sendRequest(request)
+        return json.loads(response.text)
+
+    def getWorkItemTypeActionIdByName(self, type, name):
+        actionList = self.getWorkItemTypeActions(type)
+        for action in actionList:
+            print(action['dc:title'])
+            if action['dc:title'] == name:
+                return action['dc:identifier']
 
     def createWorkItem(self,
         title, description, contributor, properties = None, stringPropeties = None):
